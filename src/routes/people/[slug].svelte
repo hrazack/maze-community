@@ -1,11 +1,5 @@
 <script context="module">
   import {createClient, UserByPathQuery} from "../../lib/data.js";
-  import { Tabs, Tab, TabList, TabPanel } from 'svelte-tabs';
-  import config from "../../lib/config.js";
-  import Banner from "../../components/Banner.svelte";
-  import ProfileSummary from "./_ProfileSummary.svelte";
-  import UserGroups from "./_UserGroups.svelte";
-  import UserContent from "./_UserContent.svelte";
   
   export async function preload({ path }) {
     const client = createClient(this.fetch);
@@ -18,6 +12,14 @@
 </script>
 
 <script>
+  import { fade } from 'svelte/transition';
+  import { Tabs, Tab, TabList, TabPanel } from 'svelte-tabs';
+  import config from "../../lib/config.js";
+  import Banner from "../../components/Banner.svelte";
+  import ProfileSummary from "./_ProfileSummary.svelte";
+  import UserGroups from "./_UserGroups.svelte";
+  import UserContent from "./_UserContent.svelte";
+  
   export let user;
   let active = "Profile";
 </script>
@@ -30,7 +32,7 @@
 
 <div id="content" class="container">
   
-  <div class="profile">
+  <div class="profile" in:fade>
   
     <ProfileSummary {user} />
   
