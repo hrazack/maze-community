@@ -5,7 +5,7 @@
   export let user;
 </script>
 
-<a class="item" href={getUserURL(user)} in:fade>
+<a class="item" rel="prefetch" href={getUserURL(user)} in:fade>
   <UserAvatar {user} size="small" />
   <div class="info">
     <h6>{user.fieldFirstName} {user.fieldLastName}</h6>

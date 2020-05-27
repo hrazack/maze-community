@@ -4,7 +4,7 @@
   export let node;
 </script>
 
-<a class="item" href={getNodeURL(node)} in:scale>
+<a class="item" rel="prefetch" href={getNodeURL(node)} in:scale>
   <div class="item-top"></div>
   <div class="item-bottom">
     <h3>{node.title}</h3>
