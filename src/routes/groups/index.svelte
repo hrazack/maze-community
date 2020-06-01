@@ -1,48 +1,40 @@
 <script context="module">
-  /// anything inside here runs only on the server - that's useful mostly for using this.fetch (provided by Sapper), as fetch does not exist in server-side javascript
-  /*
-  two options for fetch:
-  - using it inside context=module, with this.fetch -> use this if we need SEO
-  - using it with onmount -> can be used if no SEO needed
-  */
-  import { createClient, GroupsQuery } from "../../lib/data.js";
-  
-  const limit = 9;
-  
-  export async function preload({ query }) {
-    const client = createClient(this.fetch);
-    //let pg = 0;
-    //if (query.pg && !isNaN(query.pg)) {
-    //  pg = parseInt(query.pg);
-    //}
-    //const offset = pg * limit;
-    const offset = 0;
-    const nodes = await client.query({
-      query: GroupsQuery,
-      variables: { limit, offset }
-    });
-    return {
-      nodes: nodes.data.nodeQuery.entities,
-      //count: nodes.data.nodeQuery.count,
-      //pg
-    };
+  export function preload(page) { // page argument contains path, query, and params
+    return this.fetch(config.drupal_base_url+"jsonapi/node/group?page[limit]=10")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('An error occured!');
+        }
+        return response.json();
+      })
+      .then(response => {
+        // put everything in a coherent array
+        const groups = [];
+        for(let g of response.data) {
+          let group = g.attributes;
+          group.id = g.id;
+          /*if (u.relationships && u.relationships.field_image.data !== null) {
+            let index = response.included.map(function(e) { return e.id; }).indexOf(u.relationships.field_image.data.id);
+            group.field_image = response.included[index].attributes.uri.url;
+          }*/
+          groups.push(group);
+        }
+        //console.log("GROUPS", groups);
+        return {groups};
+      })
+      .catch(err => {
+        console.log(err);
+        this.error(500, "Could not fetch groups");
+      });
   }
 </script>
 
 <script>
-  import { scale, fade } from 'svelte/transition';
   import config from "../../lib/config.js";
   import Banner from "../../components/Banner.svelte";
   import GroupTeaser from "./_GroupTeaser.svelte";
-  import Paginator from "../../components/Paginator.svelte";
-  
-  export let nodes = 1;
-  //export let count;
-  //export let pg;
-  //let max = parseInt(count) / limit;
-  
-  // fetch() would not work here (it would work with a client-only svelte app, but not with a server app, as fetch does not exist in nodejs
-  // we would have to use it inside onmount
+ 
+  export let groups;
 </script>
 
 <svelte:head>
@@ -54,16 +46,10 @@
 <div id="content" class="container">
 
   <div class="groups-list">
-    {#if nodes == 1 }
-      Loading...
-    {:else}
-      {#each nodes as node}
-        <GroupTeaser {node} />
-      {/each}
-    {/if}
+    {#each groups as group}
+      <GroupTeaser {group} />
+    {/each}
   </div>
-
-  <!--<Paginator {pg} {max} />-->
 
 </div>
   

@@ -1,13 +1,24 @@
 <script context="module">
-  import {createClient, UserByPathQuery} from "../../lib/data.js";
-  
-  export async function preload({ path }) {
-    const client = createClient(this.fetch);
-    const user = await client.query({
-      query: UserByPathQuery,
-      variables: { path }
-    });
-    return { user: user.data.route.entity };
+  export function preload(page) { // page argument contains path, query, and params
+    return this.fetch(config.drupal_base_url+"jsonapi/user/user?filter[field_path]=/people/"+page.params.slug+"&include=field_image")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('An error occured!');
+        }
+        return response.json();
+      })
+      .then(response => {
+        const user = response.data[0].attributes;
+        if (response.data[0].relationships && response.data[0].relationships.field_image.data !== null) {
+          user.field_image = response.included[0].attributes.uri.url;
+        }
+        //console.log(user);
+        return {user};
+      })
+      .catch(err => {
+        console.log(err);
+        this.error(500, "Could not fetch user");
+      });
   }
 </script>
 
@@ -25,7 +36,7 @@
 </script>
 
 <svelte:head>
-  <title>{user.fieldFirstName} {user.fieldLastName} | {config.site_name}</title>
+  <title>{user.field_first_name} {user.field_last_name} | {config.site_name}</title>
 </svelte:head>
 
 <Banner title="" subtitle="" />
@@ -37,7 +48,7 @@
     <ProfileSummary {user} />
   
     <div class="profile-detail">
-    
+      
       <Tabs>
         <TabList>
           <Tab>Profile</Tab>
@@ -49,7 +60,7 @@
 
         <TabPanel>
           <div class="inside">
-            {user.fieldProfile}
+            {user.field_profile}
           </div>
         </TabPanel>
 

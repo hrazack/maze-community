@@ -31,5 +31,4 @@ label {display: block; margin: 0 0 8px 0; width: 100%;}
 input, textarea {display: block; width: 100%; max-width: 300px; font: inherit; border: 1px solid #ccc; border-radius: 3px 3px 0 0; background: white; padding: 12px; transition: border-color 0.1s ease-out;}
 input:focus, textarea:focus {border-color: #e40763; outline: none;}
 .error {color: red;}
-.invalid {border-color: red; background: #fde3e3;}
 </style>

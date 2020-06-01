@@ -1,36 +1,39 @@
 <script context="module">
-  import config from "../../lib/config.js";
-  import { createClient, UsersQuery } from "../../lib/data.js";
-  import Banner from "../../components/Banner.svelte";
-  import Paginator from "../../components/Paginator.svelte";
-  import UserTeaser from "./_UserTeaser.svelte";
-
-  const limit = 10;
-
-  export async function preload({ query }) {
-    const client = createClient(this.fetch);
-    let pg = 0;
-    if (query.pg && !isNaN(query.pg)) {
-      pg = parseInt(query.pg);
-    }
-    const offset = pg * limit;
-    const users = await client.query({
-      query: UsersQuery,
-      variables: { limit, offset }
-    });
-    return {
-      users: users.data.userQuery.entities,
-      count: users.data.userQuery.count,
-      pg
-    };
+  export function preload(page) { // page argument contains path, query, and params
+    return this.fetch(config.drupal_base_url+"jsonapi/user/user?page[limit]=10&include=field_image")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('An error occured!');
+        }
+        return response.json();
+      })
+      .then(response => {
+        // put everything in a coherent array
+        const users = [];
+        for(let u of response.data) {
+          let user = u.attributes;
+          user.id = u.id;
+          if (u.relationships && u.relationships.field_image.data !== null) {
+            let index = response.included.map(function(e) { return e.id; }).indexOf(u.relationships.field_image.data.id);
+            user.field_image = response.included[index].attributes.uri.url;
+          }
+          users.push(user);
+        }
+        return {users};
+      })
+      .catch(err => {
+        console.log(err);
+        this.error(500, "Could not fetch users");
+      });
   }
 </script>
 
 <script>
-  export let users = 1;
-  export let count;
-  export let pg;
-  let max = parseInt(count) / limit;
+  import config from "../../lib/config.js";
+  import Banner from "../../components/Banner.svelte";
+  import UserTeaser from "./_UserTeaser.svelte";
+  
+  export let users;
 </script>
 
 <svelte:head>
@@ -42,16 +45,13 @@
 <div id="content" class="container">
 
   <div class="people-list">
-    {#if users == 1 }
-      Loading...
-    {:else}
-      {#each users as user}
+    {#each users as user}
+      {#if user.drupal_internal__uid}
         <UserTeaser {user} />
-      {/each}
-    {/if}
+      {/if}
+    {/each}
   </div>
 
-  <Paginator {pg} {max} />
 
 </div>
   
